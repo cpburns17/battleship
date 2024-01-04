@@ -28,20 +28,23 @@ FONT = pygame.font.SysFont('comicsans', 30)
 
 
 FPS = 60
-VEL = 10
+VEL = 12
 # LIVES = 3
 RABBIT_VEL = 5
 SHIP_VEL = 5
 BATTLE_VEL = 1
-SUB_VEL = 20
+SUB_VEL = 12
 BULLET_VEL = 20
 MAX_BULLETS = 500
-DELAY_START = 25
-SEC_DELAY_START = 60
+DELAY_START = 45
+SEC_DELAY_START = 80
 SUB_DELAY_START = 10
 
 #MY SHIP DIMENSIONS
 MY_WIDTH, MY_HEIGHT = 25, 120
+
+#Explosion Dimensions
+EXPLODE_WIDTH, EXPLODE_HEIGHT = 58, 58
 
 #JET DIMENSIONS
 RABBIT_WIDTH, RABBIT_HEIGHT = 10, 30
@@ -58,16 +61,13 @@ MISSLE_WIDTH, MISSLE_HEIGHT = 90, 90
 SUBMARINE_WIDTH, SUBMARINE_HEIGHT = 35, 15
 
 #JET 
-JET_IMAGE = pygame.image.load(
-    os.path.join('Assets', 'jet.png')
-)
+JET_IMAGE = pygame.image.load(os.path.join('Assets', 'jet.png'))
 JET = pygame.transform.scale(JET_IMAGE, (150, 150))
 
 submarine_image = pygame.image.load(os.path.join('Assets', 'submarine.png'))
 missile_image = pygame.image.load(os.path.join('Assets', 'missile.png'))
 battleship_image = pygame.image.load(os.path.join('Assets', 'battleship.png'))
 my_ship_image = pygame.image.load(os.path.join('Assets', 'ship.png'))
-
 
 
 # class Base():
@@ -189,16 +189,18 @@ class My_Ship(pygame.sprite.Sprite):
         self.speed = speed
 my_ship = My_Ship(400, 400, VEL)
 
+explosion_image = pygame.image.load(os.path.join('Assets', 'explosion.png'))
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center) -> None:
         super().__init__()
-        self.image = pygame.image.load(os.path.join('Assets', 'explosion.png'))
+        self.image = pygame.transform.scale(explosion_image, (EXPLODE_WIDTH, EXPLODE_HEIGHT))
         self.rect = self.image.get_rect()
         self.rect.center = center
+        self.creation_time = time.time()
 
 
 
-def draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2, missile, submarines, hits, health):
+def draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2, missile, submarines, hits, health, explosions):
     LIVES = 3
     LIVES -= hits
     # HEALTH = 10
@@ -232,6 +234,9 @@ def draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2
     for bullet in bullets:
         pygame.draw.rect(WIN, RED, bullet)
 
+    for explosion in explosions:
+        WIN.blit(explosion.image, explosion.rect)
+
     pygame.display.update()
 
 # KEYS FOR SHIP
@@ -246,8 +251,9 @@ def draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2
         my_ship.rect.y += VEL
 
 
-def handle_bullets(bullets, rabbits, battleship, submarines):
+def handle_bullets(bullets, rabbits, battleship, submarines, explosions):
     bullets_to_remove = []
+    explosions_to_remove = []
 
     for bullet in bullets:
         bullet.x += BULLET_VEL
@@ -262,36 +268,51 @@ def handle_bullets(bullets, rabbits, battleship, submarines):
                 bullets_to_remove.append(bullet)
 
                 if submarine.hits <= 0:
+                    explosion = Explosion(submarine.rect.center)
+                    explosions.add(explosion)
                     submarines.remove(submarine)
-                
-        for rabbit in rabbits[:]:
+                    
+    for rabbit in rabbits[:]:
+        for bullet in bullets[:]:
             if bullet.colliderect(rabbit):
                 rabbits.remove(rabbit)
                 bullets_to_remove.append(bullet)
+                explosion = Explosion(rabbit.center)
+                explosions.add(explosion)
                 break
+
+    for explosion in explosions:
+        if time.time() - explosion.creation_time >= 1:
+            explosions_to_remove.append(explosion)
+
+    for explosion in explosions_to_remove:
+        explosions.remove(explosion)
 
     for bullet in bullets_to_remove:
         bullets.remove(bullet)
+    
 
 def main():
     run = True
-    my_ship = My_Ship(400, 400, VEL)
-    missile = Missile(1200, -200, 10, -35)
-
     clock = pygame.time.Clock()
     start_time = time.time()
     elapsed_time = 0
 
+
+    my_ship = My_Ship(400, 400, VEL)
+    missile = Missile(1200, -200, 10, -35)
+    explosions = pygame.sprite.Group() 
+
+
     rabbit_add_increment = 2000
     rabbit_count = 0
-
     rabbits = []
     bullets = []
     submarines = []
     hits = 0
     health = 10
 
-
+# RUNNING GAME
     while run:
         clock.tick(FPS)
         rabbit_count += clock.tick(FPS)
@@ -364,9 +385,9 @@ def main():
             missile.move2()
 
 # Handle Functions
-        handle_bullets(bullets, rabbits, battleship, submarines)
+        handle_bullets(bullets, rabbits, battleship, submarines, explosions)
 
-        draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2, missile, submarines, hits, health)
+        draw_window(my_ship, bullets, elapsed_time, rabbits, battleship, battleship2, missile, submarines, hits, health, explosions)
 
     pygame.quit()
 
