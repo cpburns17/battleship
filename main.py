@@ -36,7 +36,7 @@ MAX_BULLETS = 500
 
 #Start times
 DELAY_START = 5
-SEC_DELAY_START = 75
+SEC_DELAY_START = 15
 SUB_DELAY_START = 5
 
 #My Ship Dimensions
@@ -142,23 +142,6 @@ class Battleship:
 
         if self.hits <= 0:
             self.should_remove = True
-# MOVE 2
-    def move2(self):
-        self.rect.x += self.speed * math.cos(self.angle)
-        self.rect.y -= self.speed * math.sin(self.angle)
-
-        self.time_since_last_missile += 1
-        if self.time_since_last_missile >= self.missile_interval:
-            missile = Missile(
-                self.rect.x + 70, self.rect.y + self.rect.height // 9, 10, -5)
-            self.missiles.append(missile)
-            self.time_since_last_missile = 0
-
-        for missile in self.missiles:
-            missile.move()
-
-        if self.hits <= 0:
-            self.should_remove = True
 
 # battleship = Battleship(1200 , -200, BATTLE_VEL, BATTLE_ANGLE)
 # battleship2 = Battleship(100, 1000, BATTLE_VEL, BATTLE_ANGLE_2)
@@ -192,7 +175,7 @@ class Explosion(pygame.sprite.Sprite):
 
 
 
-def draw_window(my_ship, bullets, elapsed_time, jets, battleship, battleship2, missile, submarines, hits, explosions):
+def draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, submarines, hits, explosions):
     LIVES = 3
     LIVES -= hits
 
@@ -209,11 +192,9 @@ def draw_window(my_ship, bullets, elapsed_time, jets, battleship, battleship2, m
 
     if battleship is not None and battleship.hits > 0:
         WIN.blit(battleship.image, battleship.rect)
-        WIN.blit(battleship2.image, battleship2.rect)
         for missile in battleship.missiles:
             WIN.blit(missile.image, missile.rect)
             missile.move()
-            missile.move2()
             
     for submarine in submarines:
         WIN.blit(submarine.image, submarine.rect)
@@ -294,7 +275,6 @@ def main():
 
     my_ship = My_Ship(100, 400, VEL)
     battleship = Battleship(1200 , -200, BATTLE_VEL, BATTLE_ANGLE)
-    battleship2 = Battleship(100, 1000, BATTLE_VEL, BATTLE_ANGLE_2)
     missile = Missile(1200, -200, 10, -35)
     explosions = pygame.sprite.Group() 
 
@@ -383,14 +363,11 @@ def main():
             battleship.move()
             missile.move()
 
-        if elapsed_time >= SEC_DELAY_START:
-            battleship2.move2()
-            missile.move2()
+        # if elapsed_time >= SEC_DELAY_START:
 
 # Handle Functions
         handle_bullets(bullets, jets, battleship, submarines, explosions)
-
-        draw_window(my_ship, bullets, elapsed_time, jets, battleship, battleship2, missile, submarines, hits, explosions)
+        draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, submarines, hits, explosions)
 
     pygame.quit()
 
