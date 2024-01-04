@@ -35,7 +35,7 @@ BULLET_VEL = 20
 MAX_BULLETS = 500
 
 #Start times
-DELAY_START = 10
+DELAY_START = 5
 SEC_DELAY_START = 75
 SUB_DELAY_START = 5
 
@@ -55,6 +55,7 @@ BATTLE_ANGLE_2 = 45
 
 # Missle Dimensions
 MISSLE_WIDTH, MISSLE_HEIGHT = 100, 100
+Rand_Missiles = random.randint(-10, 10)
 
 # Subarine Dimensions
 SUBMARINE_WIDTH, SUBMARINE_HEIGHT = 35, 15
@@ -88,8 +89,9 @@ class Submarine(pygame.sprite.Sprite):
 
 
 
-class Missile:
-    def __init__(self, x, y, speed, angle_degrees) -> None:      
+class Missile(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed, angle_degrees) -> None:   
+        super().__init__()   
         self.image = pygame.transform.rotate(pygame.transform.scale(missile_image, (MISSLE_WIDTH, MISSLE_HEIGHT)), 10)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -302,6 +304,7 @@ def main():
     jets = []
     bullets = []
     submarines = []
+    missiles = []
     hits = 0
 
 # RUNNING GAME
@@ -312,14 +315,12 @@ def main():
 
 
 # MISSILES
-        # for missile in missiles[:]:
-        #     submarine.move()
-        #     if pygame.sprite.collide_rect(submarine, my_ship):
-        #         submarines.remove(submarine)
-        #         my_ship.health -= 20
-        #         print("hit by sub")
-        #         # hits +=1
-        #         break
+        for missile in battleship.missiles[:]:
+            if pygame.sprite.collide_rect(missile, my_ship):
+                battleship.missiles.remove(missile)
+                my_ship.health -= 20
+                print("hit by missile")
+                break
         
 # SUBMARINES
         if elapsed_time >= SUB_DELAY_START:
@@ -334,7 +335,6 @@ def main():
                     submarines.remove(submarine)
                     my_ship.health -= 20
                     print("hit by sub")
-                    # hits +=1
                     break
 
 # JETS
