@@ -29,7 +29,7 @@ FPS = 60
 
 #Velocity 
 VEL = 12
-JET_VEL = 6
+JET_VEL = 5
 SUB_VEL = 11
 BATTLE_VEL = 1
 MISS_VEL = 10
@@ -39,16 +39,16 @@ REP_VEL = 6
 BOSS_VEL = 1
 LAS_VEL = 30
 PAT_VEL = 1
-ROCKET_VEL = 50
+ROCKET_VEL = 40
 MAX_BULLETS = 500
 
 #Start times
 MEDIC_DELAY_START = 20
 REP_DELAY_START = 25
-SUB_DELAY_START = 20
-BATTLE_DELAY_START = 25
-PATROL_DELAY_START = 5
-BOSS_DELAY_START = 70
+SUB_DELAY_START = 8
+BATTLE_DELAY_START = 55
+PATROL_DELAY_START = 25
+BOSS_DELAY_START = 80
 
 #My Ship Dimensions
 MY_WIDTH, MY_HEIGHT = 25, 120
@@ -77,7 +77,7 @@ PATROL_WIDTH, PATROL_HEIGHT = 170, 30
 Patrol_angle = 45
 
 #Rocket Dimensions
-ROCK_WIDTH, ROCK_HEIGHT = 10, 4
+ROCK_WIDTH, ROCK_HEIGHT = 12, 6
 
 # #Battleship Dimensions
 BATTLESHIP_WIDTH, BATTLESHIP_HEIGHT = 240, 40
@@ -141,7 +141,7 @@ class FinalBoss(pygame.sprite.Sprite):
         self.speed = speed
         self.health = health
         self.max_health = max_health
-        self.hits = 150
+        self.hits = 102
         self.should_remove = False
         self.destroyed = False
         self.lasers = []
@@ -296,7 +296,7 @@ class Patrol(pygame.sprite.Sprite):
         self.rect.y = y
         self.speed = speed
         self.angle = math.radians(angle_degrees)
-        self.hits = 10
+        self.hits = 30
         self.should_remove = False
         self.destroyed = False
         self.rockets = []
@@ -311,7 +311,7 @@ class Patrol(pygame.sprite.Sprite):
         self.time_since_last_rocket += 1
         if self.time_since_last_rocket >= self.rocket_interval:
             rocket = Rockets(
-                self.rect.x + 70, self.rect.y + self.rect.height // 9, LAS_VEL, -5, 10)
+                self.rect.x + 20, self.rect.y + self.rect.height // 5, LAS_VEL, -20, 20)
             self.rockets.append(rocket)
             self.time_since_last_rocket = 0
 
@@ -548,9 +548,9 @@ def main():
     final_boss = FinalBoss(1300, 400, BOSS_VEL)
     laser = Laser(1300, 400, LAS_VEL, -20, 20)
     battleship = Battleship(1200 , -200, BATTLE_VEL, BATTLE_ANGLE)
-    patrol = Patrol(1300, 1000, PAT_VEL, Patrol_angle)
+    patrol = Patrol(1300, 850, PAT_VEL, Patrol_angle)
     missile = Missile(1200, -200, 10, -35, 5)
-    rocket = Rockets(100, 100, ROCKET_VEL, -25, 25)
+    rocket = Rockets(800, 800, ROCKET_VEL, -1, 1)
     explosions = pygame.sprite.Group() 
 
 # Incrementing & Lists
