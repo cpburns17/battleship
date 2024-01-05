@@ -39,7 +39,7 @@ REP_VEL = 6
 BOSS_VEL = 1
 LAS_VEL = 30
 PAT_VEL = 1
-ROCKET_VEL = 40
+ROCKET_VEL = 25
 MAX_BULLETS = 500
 
 #Start times
@@ -47,7 +47,7 @@ MEDIC_DELAY_START = 20
 REP_DELAY_START = 25
 SUB_DELAY_START = 8
 BATTLE_DELAY_START = 55
-PATROL_DELAY_START = 25
+PATROL_DELAY_START = 5
 BOSS_DELAY_START = 80
 
 #My Ship Dimensions
@@ -77,7 +77,7 @@ PATROL_WIDTH, PATROL_HEIGHT = 170, 30
 Patrol_angle = 45
 
 #Rocket Dimensions
-ROCK_WIDTH, ROCK_HEIGHT = 12, 6
+ROCK_WIDTH, ROCK_HEIGHT = 13, 5
 
 # #Battleship Dimensions
 BATTLESHIP_WIDTH, BATTLESHIP_HEIGHT = 240, 40
@@ -242,7 +242,7 @@ class Battleship:
         self.rect.y = y
         self.speed = speed
         self.angle = math.radians(angle_degrees)
-        self.hits = 25
+        self.hits = 45
         self.should_remove = False
         self.destroyed = False
         self.missiles = []
@@ -296,7 +296,7 @@ class Patrol(pygame.sprite.Sprite):
         self.rect.y = y
         self.speed = speed
         self.angle = math.radians(angle_degrees)
-        self.hits = 30
+        self.hits = 25
         self.should_remove = False
         self.destroyed = False
         self.rockets = []
@@ -311,7 +311,7 @@ class Patrol(pygame.sprite.Sprite):
         self.time_since_last_rocket += 1
         if self.time_since_last_rocket >= self.rocket_interval:
             rocket = Rockets(
-                self.rect.x + 20, self.rect.y + self.rect.height // 5, LAS_VEL, -20, 20)
+                self.rect.x + 20, self.rect.y + self.rect.height // 5, ROCKET_VEL, -20, 20)
             self.rockets.append(rocket)
             self.time_since_last_rocket = 0
 
