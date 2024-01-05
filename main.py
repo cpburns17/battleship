@@ -6,7 +6,6 @@ import sys
 import math
 
 pygame.font.init()
-from pygame.sprite import Sprite
 
 #WIN means WINDOW
 WIDTH, HEIGHT = 1200, 800
@@ -20,30 +19,34 @@ BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (1200, 800))
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+BLUE = (77, 144, 195)
 RED = (255, 0, 0)
 FONT = pygame.font.SysFont('comicsans', 30)
+title_text = FONT.render(f'Welcome to BattleShip', 1, 'white')
 MOWER_HIT = pygame.USEREVENT +1
 FPS = 60
 
 #Velocity 
 VEL = 12
-JET_VEL = 4
+JET_VEL = 5
 SUB_VEL = 9
 BATTLE_VEL = 1
-MISS_VEL = 15
+MISS_VEL = 12
 BULLET_VEL = 20
-MEDIC_VEL = 4
-REP_VEL = 4
+MEDIC_VEL = 6
+REP_VEL = 6
 BOSS_VEL = 1
 LAS_VEL = 30
+PAT_VEL = 10
 
 MAX_BULLETS = 500
 
 #Start times
-BATTLE_DELAY_START = 40
-SUB_DELAY_START = 6
-MEDIC_DELAY_START = 10
-BOSS_DELAY_START = 85
+BATTLE_DELAY_START = 45
+PATROL_DELAY_START = 5
+SUB_DELAY_START = 10
+MEDIC_DELAY_START = 20
+BOSS_DELAY_START = 90
 
 #My Ship Dimensions
 MY_WIDTH, MY_HEIGHT = 25, 120
@@ -66,6 +69,10 @@ REP_WIDTH, REP_HEIGHT = 35, 35
 
 #Jet Dimensions
 JET_WIDTH, JET_HEIGHT = 10, 30
+
+#Patrol Dimensions
+PATROL_WIDTH, PATROL_HEIGHT = 90, 20
+Patrol_angle = 25
 
 # #Battleship Dimensions
 BATTLESHIP_WIDTH, BATTLESHIP_HEIGHT = 240, 40
@@ -98,8 +105,9 @@ laser_image = pygame.image.load(os.path.join ('Assets', 'laser.png'))
 medic_health = pygame.image.load(os.path.join ('Assets', 'medic.png'))
 repair_image = pygame.image.load(os.path.join ('Assets', 'repair.png'))
 beach = pygame.image.load(os.path.join ('Assets', 'beach2.png'))
-city = pygame.image.load(os.path.join ('Assets', 'city1.png'))
+city = pygame.image.load(os.path.join ('Assets', 'city.png'))
 city1 = pygame.transform.scale(city, (500, 900))
+patrol = pygame.image.load(os.path.join ('Assets', 'patrol.png'))
 
 
 class Laser(pygame.sprite.Sprite):
@@ -226,7 +234,7 @@ class Battleship:
         self.rect.y = y
         self.speed = speed
         self.angle = math.radians(angle_degrees)
-        self.hits = 45
+        self.hits = 30
         self.should_remove = False
         self.destroyed = False
         self.missiles = []
@@ -240,7 +248,7 @@ class Battleship:
         self.time_since_last_missile += 1
         if self.time_since_last_missile >= self.missile_interval:
             missile = Missile(
-                self.rect.x + 70, self.rect.y + self.rect.height // 9, MISS_VEL, -10, 10)
+                self.rect.x + 70, self.rect.y + self.rect.height // 9, MISS_VEL, -15, 15)
             self.missiles.append(missile)
             self.time_since_last_missile = 0
 
@@ -252,9 +260,25 @@ class Battleship:
         elif self.hits <= 0:
             self.should_remove = True
 
+class Patrol(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed, angle_degrees) -> None:
+        super().__init__()
+        self.image = pygame.transform.rotate(pygame.transform.scale(patrol, (PATROL_WIDTH, PATROL_HEIGHT)), -20)  
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = speed
+        self.angle = math.radians(angle_degrees)
+        self.hits = 15
+        self.should_remove = False
+        self.destroyed = False
+        # self.missiles = []
+        # self.time_since_last_missile = 0
+        # self.missile_interval = 25
 
-# battleship = Battleship(1200 , -200, BATTLE_VEL, BATTLE_ANGLE)
-# battleship2 = Battleship(100, 1000, BATTLE_VEL, BATTLE_ANGLE_2)
+    def move(self):
+        self.rect.x -= self.speed * math.cos(self.angle)
+        self.rect.y -= self.speed * math.sin(self.angle)
 
 
 
@@ -272,6 +296,19 @@ class My_Ship(pygame.sprite.Sprite):
     def healthbar(self, window):
         pygame.draw.rect(window, (255,0,0), (self.rect.x, self.rect.y + self.image.get_height() + 10, self.image.get_width(), 8))
         pygame.draw.rect(window, (0,255,0), (self.rect.x, self.rect.y + self.image.get_height() + 10, self.image.get_width() * (self.health/self.max_health), 8))
+
+class Jet(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed) -> None:
+        super().__init__()
+        self.image = pygame.transform.scale(JET_IMAGE, (150, 150))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = speed
+
+    def move(self):
+        self.rect.x -= self.speed
+
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -300,13 +337,13 @@ class Explosion3(pygame.sprite.Sprite):
 
 
 
-def draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, submarines, hits, explosions, medics, final_boss, laser, repairs):
+def draw_window( my_ship, bullets, elapsed_time, jets, battleship, patrol, missile, submarines, hits, explosions, medics, final_boss, laser, repairs):
     LIVES = 3
     LIVES -= hits
 
     WIN.blit(BACKGROUND, (0,0))
     WIN.blit(beach, (-270, 0) )
-    # WIN.blit(city1, (-200, 0))
+    WIN.blit(city1, (-490, 0))
 
     time_text = FONT.render(f'Time: {round(elapsed_time)}s', 1, 'white')
     WIN.blit(time_text, (550, 10))
@@ -322,6 +359,13 @@ def draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, subma
         for missile in battleship.missiles:
             WIN.blit(missile.image, missile.rect)
             missile.move()
+
+
+    if patrol is not None and patrol.hits > 0:
+        WIN.blit(patrol.image, patrol.rect)
+        # for missile in battleship.missiles:
+        #     WIN.blit(missile.image, missile.rect)
+        #     missile.move()
             
     for submarine in submarines:
         WIN.blit(submarine.image, submarine.rect)
@@ -340,8 +384,8 @@ def draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, subma
             laser.move()
 
     for jet in jets:
-        pygame.draw.rect(WIN, BLACK, jet)
-        WIN.blit(JET, (jet.x -65, jet.y - 65))
+        WIN.blit(jet.image, jet.rect)
+
 
     for bullet in bullets:
         pygame.draw.rect(WIN, RED, bullet)
@@ -363,11 +407,11 @@ def draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, subma
         my_ship.rect.y += VEL
 
 
-def handle_bullets(bullets, jets, battleship, submarines, explosions, final_boss):
+def handle_bullets(bullets, jets, battleship, patrol, submarines, explosions, final_boss):
     bullets_to_remove = []
     explosions_to_remove = []
 
-    for bullet in bullets:
+    for bullet in bullets.copy():
         bullet.x += BULLET_VEL
 
         if not battleship.destroyed and bullet.colliderect(battleship.rect):
@@ -376,6 +420,16 @@ def handle_bullets(bullets, jets, battleship, submarines, explosions, final_boss
                 battleship.destroyed = True
             else:
                 explosion = Explosion(battleship.rect.center)
+                explosions.add(explosion)
+                bullets_to_remove.append(bullet)
+
+        # for patrol in patrols[:]:
+        if not patrol.destroyed and bullet.colliderect(patrol.rect):
+            patrol.hits -= 1
+            if patrol.hits == 0:
+                battleship.destroyed = True
+            else:
+                explosion = Explosion(patrol.rect.center)
                 explosions.add(explosion)
                 bullets_to_remove.append(bullet)
 
@@ -398,13 +452,16 @@ def handle_bullets(bullets, jets, battleship, submarines, explosions, final_boss
                     explosion = Explosion(submarine.rect.center)
                     explosions.add(explosion)
                     submarines.remove(submarine)
+
+    for bullet in bullets_to_remove:
+        bullets.remove(bullet)
                     
     for jet in jets[:]:
         for bullet in bullets[:]:
-            if bullet.colliderect(jet):
+            if bullet.colliderect(jet.rect):
                 jets.remove(jet)
                 bullets_to_remove.append(bullet)
-                explosion = Explosion(jet.center)
+                explosion = Explosion(jet.rect.center)
                 explosions.add(explosion)
                 break
 
@@ -415,45 +472,91 @@ def handle_bullets(bullets, jets, battleship, submarines, explosions, final_boss
     for explosion in explosions_to_remove:
         explosions.remove(explosion)
 
-    for bullet in bullets_to_remove:
-        bullets.remove(bullet)
+
+def draw_title_screen():
+    WIN.fill((0, 0, 0))
+    title_text = FONT.render('Welcome to BattleShip', 1, 'white')
+    subtitle_text = FONT.render('Use "W, A, S, D" to control your battleship, and press spacebar to shoot.', 1, 'white')
+    subtitle_text2 = FONT.render('Protect your beach base from fighter jets', 1, 'white')
+    subtitle_text3 = FONT.render('Missile and lasers will damage your Battleship, so avoid them at all cost.', 1, 'white')
+    subtitle_text4 = FONT.render('Press Return key to begin... Good luck.', 1, 'white')
+    WIN.blit(title_text, (WIDTH // 2- title_text.get_width() // 2, 150))
+    WIN.blit(subtitle_text, (WIDTH // 6 - title_text.get_width() // 2, 450))
+    WIN.blit(subtitle_text2, (WIDTH // 6 - title_text.get_width() // 2, 300))
+    WIN.blit(subtitle_text3, (WIDTH // 6 - title_text.get_width() // 2, 350))
+    WIN.blit(subtitle_text4, (WIDTH // 2.5 - title_text.get_width() // 2, 550))
+    pygame.display.update()
     
 
 def main():
     run = True
     clock = pygame.time.Clock()
-    start_time = time.time()
-    elapsed_time = 0
+    start_time = 0
+    Title_screen = True
 
 
     my_ship = My_Ship(100, 400, VEL)
     final_boss = FinalBoss(1300, 400, BOSS_VEL)
     laser = Laser(1300, 400, LAS_VEL, -20, 20)
     battleship = Battleship(1200 , -200, BATTLE_VEL, BATTLE_ANGLE)
+    patrol = Patrol(1500, 900, PAT_VEL, Patrol_angle)
     missile = Missile(1200, -200, 10, -35, 5)
     explosions = pygame.sprite.Group() 
-    # medic = Medic()
 
 
-    jet_add_increment = 2100
+    jet_add_increment = 1100
     jet_count = 0
     jets = []
     bullets = []
+    shooting = False
     submarines = []
     medics = []
     repairs = []
     missiles = []
+    patrols = []
     hits = 0
+
 
 # RUNNING GAME
     while run:
         clock.tick(FPS)
-        jet_count += clock.tick(FPS)
-        elapsed_time = time.time() - start_time
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                break
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    Title_screen = False
+                    start_time = time.time()
+
+                if event.key == pygame.K_SPACE and not shooting:
+                    bullet = pygame.Rect(
+                        my_ship.rect.x + 70, my_ship.rect.y + MY_HEIGHT//9, 10, 5)
+                    bullets.append(bullet)
+                    shooting = True  # Set the flag to True
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    shooting = False
+
+        keys = pygame.key.get_pressed()
+
+        if Title_screen:
+            elapsed_time = 0
+            draw_title_screen()
+            pygame.display.update()
+            continue
+            
+        else:
+            jet_count += clock.tick(FPS)
+            elapsed_time = time.time() - start_time
 
 # MEDIC 
         if elapsed_time >= MEDIC_DELAY_START:
-            if random.randint(0, 500) < 1:  
+            if random.randint(0, 600) < 1:  
                 medic_y = random.randint(0, HEIGHT - HEALTH_HEIGHT)
                 medic = Medic(WIDTH, medic_y, MEDIC_VEL)
                 medics.append(medic)
@@ -468,7 +571,7 @@ def main():
 # REPAIR
                 
         if elapsed_time >= MEDIC_DELAY_START:
-            if random.randint(0, 500) < 1:  
+            if random.randint(0, 600) < 1:  
                 repair_y = random.randint(0, HEIGHT - REP_HEIGHT)
                 repair = Repair(WIDTH, repair_y, MEDIC_VEL)
                 repairs.append(repair)
@@ -479,6 +582,25 @@ def main():
                     hits -= 1
                     repairs.remove(repair)
                     break
+# PATROL
+                
+        # for patrol in patrols[:]:
+        #     patrol.move()
+        if patrol.rect.x < WIDTH - 1260:
+            # patrols.remove(patrol)
+            patrol.kill()
+            hits += 1
+            print(f' Im nit {hits}')
+            explosion = Explosion3(patrol.rect.center)
+            explosions.add(explosion) 
+
+        # if patrol:
+        #     if patrol.rect.x < WIDTH - 1260:
+        #         patrols.remove(patrol)
+        #         hits += 1
+        #         print(f' Im nit {hits}')
+        #         explosion = Explosion3(patrol.rect.center)
+        #         explosions.add(explosion) 
 
 # LASERS
                 
@@ -517,13 +639,13 @@ def main():
 
 # JETS
         for jet in jets[:]:
-            jet.x -= JET_VEL
-            if jet.x < WIDTH - 1200:
+            jet.move()
+            if jet.rect.x < WIDTH - 1270:
                 hits +=1
                 jets.remove(jet)
-                explosion = Explosion3(jet.center)
+                explosion = Explosion3(jet.rect.center)
                 explosions.add(explosion) 
-            elif jet.colliderect(my_ship):
+            elif pygame.sprite.collide_rect(jet, my_ship):
                 my_ship.health -= 20
                 explosion = Explosion2(my_ship.rect.center)
                 explosions.add(explosion)
@@ -539,9 +661,8 @@ def main():
 
         if jet_count > jet_add_increment:
             for _ in range(1):
-                jet_x = random.randint(WIDTH, WIDTH)
-                jet_y = random.randint(0, HEIGHT - (JET_WIDTH + 5))
-                jet = pygame.Rect(jet_x, jet_y, JET_HEIGHT, JET_WIDTH + 10)
+                jet_y = random.randint(0, 700)
+                jet = Jet(WIDTH, jet_y, JET_VEL)
                 jets.append(jet)
             
             jet_add_increment = max(200, jet_add_increment -50)
@@ -550,19 +671,13 @@ def main():
             jet_add_increment = 60000
 
 
-# Pygame.event 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                break
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and len(bullets) < MAX_BULLETS:
-                    bullet = pygame.Rect(
-                        my_ship.rect.x + 70, my_ship.rect.y + MY_HEIGHT//9, 10, 5)
-                    bullets.append(bullet)
 
 # Delay Start
+            
+        if elapsed_time >= PATROL_DELAY_START:
+            if patrol.destroyed == False:
+                patrol.move()
+
         if elapsed_time >= BATTLE_DELAY_START:
             if battleship.destroyed == False:
                 battleship.move()
@@ -574,9 +689,8 @@ def main():
                 laser.move
 
 # Handle Functions
-        handle_bullets(bullets, jets, battleship, submarines, explosions, final_boss)
-        # print(battleship)
-        draw_window(my_ship, bullets, elapsed_time, jets, battleship, missile, submarines, hits, explosions, medics, final_boss, laser, repairs)
+        handle_bullets(bullets, jets, battleship, patrol, submarines, explosions, final_boss)
+        draw_window( my_ship, bullets, elapsed_time, jets, battleship, patrol, missile, submarines, hits, explosions, medics, final_boss, laser, repairs)
 
     pygame.quit()
 
