@@ -34,8 +34,8 @@ SUB_VEL = 11
 BATTLE_VEL = 1
 MISS_VEL = 10
 BULLET_VEL = 20
-MEDIC_VEL = 6
-REP_VEL = 6
+MEDIC_VEL = 4
+REP_VEL = 4
 BOSS_VEL = 1
 LAS_VEL = 30
 PAT_VEL = 1
@@ -48,10 +48,13 @@ REP_DELAY_START = 25
 SUB_DELAY_START = 8
 BATTLE_DELAY_START = 55
 PATROL_DELAY_START = 25
-BOSS_DELAY_START = 85
+BOSS_DELAY_START = 80
 
 #My Ship Dimensions
 MY_WIDTH, MY_HEIGHT = 25, 120
+
+#Bullet Dimensions
+BUL_WIDTH, BUL_HEIGHT = 20, 10
 
 #Final Boss Dimensions
 BOSS_WIDTH, BOSS_HEIGHT = 400, 200
@@ -67,17 +70,17 @@ EXPLODE_WIDTH_2, EXPLODE_HEIGHT_2 = 100, 100
 HEALTH_WIDTH, HEALTH_HEIGHT = 50, 50
 
 #Repair Dimensions
-REP_WIDTH, REP_HEIGHT = 35, 35
+REP_WIDTH, REP_HEIGHT = 31, 31
 
 #Jet Dimensions
-JET_WIDTH, JET_HEIGHT = 10, 30
+JET_WIDTH, JET_HEIGHT = 80, 50
 
 #Patrol Dimensions
 PATROL_WIDTH, PATROL_HEIGHT = 170, 30
 Patrol_angle = 45
 
 #Rocket Dimensions
-ROCK_WIDTH, ROCK_HEIGHT = 13, 5
+ROCK_WIDTH, ROCK_HEIGHT = 15, 4
 
 # #Battleship Dimensions
 BATTLESHIP_WIDTH, BATTLESHIP_HEIGHT = 240, 40
@@ -85,16 +88,13 @@ BATTLE_ANGLE = -35
 BATTLE_ANGLE_2 = 45
 
 # Missle Dimensions
-MISSLE_WIDTH, MISSLE_HEIGHT = 100, 100
+MISSLE_WIDTH, MISSLE_HEIGHT = 35, 17
 
 # Subarine Dimensions
 SUBMARINE_WIDTH, SUBMARINE_HEIGHT = 35, 15
 
-#JET 
-JET_IMAGE = pygame.image.load(os.path.join('Assets', 'jet.png'))
-JET = pygame.transform.scale(JET_IMAGE, (150, 150))
-
 # Object Images
+JET_IMAGE = pygame.image.load(os.path.join('Assets', 'jet.png'))
 submarine_image = pygame.image.load(os.path.join('Assets', 'submarine.png'))
 missile_image = pygame.image.load(os.path.join('Assets', 'missile.png'))
 battleship_image = pygame.image.load(os.path.join('Assets', 'battleship.png'))
@@ -108,13 +108,27 @@ big_explosion = pygame.image.load(os.path.join ('Assets', 'bigexplode.png'))
 final_boss = pygame.image.load(os.path.join ('Assets', 'finalboss.png'))
 laser_image = pygame.image.load(os.path.join ('Assets', 'laser.png'))
 medic_health = pygame.image.load(os.path.join ('Assets', 'medic.png'))
-repair_image = pygame.image.load(os.path.join ('Assets', 'repair.png'))
+repair_image = pygame.image.load(os.path.join ('Assets', 'heart.png'))
 beach = pygame.image.load(os.path.join ('Assets', 'beach2.png'))
 city = pygame.image.load(os.path.join ('Assets', 'city.png'))
 city1 = pygame.transform.scale(city, (500, 900))
 patrol = pygame.image.load(os.path.join ('Assets', 'patrol.png'))
 rocket_image = pygame.image.load(os.path.join ('Assets', 'rocket2.png'))
+bullet_img = pygame.image.load(os.path.join ('Assets', 'bullet1.png'))
 
+
+
+# class Bullet(pygame.sprite.Sprite):
+#     def __init__(self, x, y, speed) -> None:
+#         super().__init__()
+#         self.image = pygame.transform.scale(bullet_img, (BUL_WIDTH, BUL_HEIGHT))
+#         self.rect = self.image.get_rect()
+#         self.rect.x = x
+#         self.rect.y = y
+#         self.speed = speed
+
+#     def move(self):
+#         self.rect.x += self.speed
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, x, y, speed, angle1, angle2) -> None:   
@@ -301,7 +315,7 @@ class Patrol(pygame.sprite.Sprite):
         self.destroyed = False
         self.rockets = []
         self.time_since_last_rocket = 0
-        self.rocket_interval = 5
+        self.rocket_interval = 10
 
     def move(self):
         self.rect.x -= self.speed * math.cos(self.angle)
@@ -336,14 +350,18 @@ class My_Ship(pygame.sprite.Sprite):
         self.health = health
         self.max_health = max_health
 
+        
+
     def healthbar(self, window):
         pygame.draw.rect(window, (255,0,0), (self.rect.x, self.rect.y + self.image.get_height() + 10, self.image.get_width(), 8))
         pygame.draw.rect(window, (0,255,0), (self.rect.x, self.rect.y + self.image.get_height() + 10, self.image.get_width() * (self.health/self.max_health), 8))
 
+
+
 class Jet(pygame.sprite.Sprite):
     def __init__(self, x, y, speed) -> None:
         super().__init__()
-        self.image = pygame.transform.scale(JET_IMAGE, (150, 150))
+        self.image = pygame.transform.scale(JET_IMAGE, (JET_WIDTH, JET_HEIGHT))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -432,6 +450,7 @@ def draw_window( my_ship, bullets, elapsed_time, jets, battleship, patrol, rocke
         WIN.blit(jet.image, jet.rect)
 
     for bullet in bullets:
+        # WIN.blit(bullet.image, bullet.rect)
         pygame.draw.rect(WIN, RED, bullet)
 
     for explosion in explosions:
@@ -457,7 +476,7 @@ def handle_bullets(bullets, jets, battleship, patrol, submarines, explosions, fi
     bullets_to_remove = []
     explosions_to_remove = []
 
-    for bullet in bullets.copy():
+    for bullet in bullets:
         bullet.x += BULLET_VEL
 
         if not battleship.destroyed and bullet.colliderect(battleship.rect):
@@ -526,7 +545,7 @@ def draw_title_screen():
     subtitle_text2 = FONT.render('Protect your beach base from enemy fighter jets.', 1, 'white')
     subtitle_text3 = FONT.render('Missiles and lasers will damage your Battleship, but not your base.', 1, 'white')
     subtitle_text4 = FONT.render('Press Return key to begin... Good luck.', 1, 'white')
-    subtitle_text5 = FONT.render('Medpacks (green) heal your ship and Repair icons (grey) add 1 life.', 1, 'white')
+    subtitle_text5 = FONT.render('Medpacks (green) heal your ship and Hearts (red) add 1 life.', 1, 'white')
     WIN.blit(title_text, (WIDTH // 2- title_text.get_width() // 2, 150))
     WIN.blit(subtitle_text, (WIDTH // 6 - title_text.get_width() // 2, 490))
     WIN.blit(subtitle_text2, (WIDTH // 6 - title_text.get_width() // 2, 300))
@@ -551,6 +570,7 @@ def main():
     patrol = Patrol(1300, 850, PAT_VEL, Patrol_angle)
     missile = Missile(1200, -200, 10, -35, 5)
     rocket = Rockets(800, 800, ROCKET_VEL, -1, 1)
+    # bullet = Bullet(100, 400, BULLET_VEL)
     explosions = pygame.sprite.Group() 
 
 # Incrementing & Lists
