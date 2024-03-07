@@ -46,7 +46,7 @@ SUB_VEL = 11
 BATTLE_VEL = 1
 MISS_VEL = 10
 BULLET_VEL = 20
-MEDIC_VEL = 4
+MEDIC_VEL = 5
 REP_VEL = 4
 BOSS_VEL = 1
 LAS_VEL = 30
@@ -133,7 +133,6 @@ class Explosion3(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = center
         self.creation_time = time.time()
-
 
 #DRAW WINDOW
 def draw_window( my_ship, bullets, elapsed_time, jets, battleship, patrol, rocket, missile, submarines, hits, explosions, medics, final_boss, laser, repairs):
@@ -276,7 +275,7 @@ def handle_bullets(bullets, jets, battleship, patrol, submarines, explosions, fi
 # TITLE SCREEN
 def draw_title_screen():
     WIN.fill((0, 0, 0))
-    title_text = FONT.render('Welcome to BattleShip', 1, 'white')
+    title_text = FONT.render('Welcome to BattleShips', 1, 'white')
     subtitle_text = FONT.render('Use "W, A, S, D" to control your battleship, press spacebar to shoot.', 1, 'red')
     subtitle_text2 = FONT.render('Protect your beach base from enemy fighter jets.', 1, 'white')
     subtitle_text3 = FONT.render('Missiles and lasers will damage your Battleship, but not your base.', 1, 'white')
@@ -365,7 +364,7 @@ def main():
 
 # MEDIC MOVEMENT
         if elapsed_time >= MEDIC_DELAY_START:
-            if random.randint(0, 600) < 1:  
+            if random.randint(0, 580) < 1:  
                 medic_y = random.randint(0, HEIGHT - HEALTH_HEIGHT)
                 medic = Medic(WIDTH, medic_y, MEDIC_VEL)
                 medics.append(medic)
@@ -379,7 +378,7 @@ def main():
 
 # REPAIR MOVEMENT
         if elapsed_time >= REP_DELAY_START:
-            if random.randint(0, 900) < 1:  
+            if random.randint(0, 800) < 1:  
                 repair_y = random.randint(0, HEIGHT - REP_HEIGHT)
                 repair = Repair(WIDTH, repair_y, MEDIC_VEL)
                 repairs.append(repair)
